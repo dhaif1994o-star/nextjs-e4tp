@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function Home() {
   const [data, setData] = useState<any>(null);
@@ -9,12 +9,18 @@ export default function Home() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch('/api/test');
-        if (!res.ok) throw new Error('Failed to fetch');
+        const baseUrl =
+          typeof window !== 'undefined' && window.location.hostname === 'localhost'
+            ? 'http://localhost:3000'
+            : 'https://nextjs-e4tp-yx8g.vercel.app';
+
+        const res = await fetch(`${baseUrl}/api/test`);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
         const json = await res.json();
         setData(json);
-      } catch (err) {
-        setError('⚠️ Connection failed');
+      } catch {
+        setError('❌ Connection failed: Failed to fetch');
       }
     }
 
@@ -22,13 +28,13 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-white text-black">
       <h1 className="text-3xl font-bold mb-4">Jazan AI Web</h1>
 
       {error && <p className="text-red-500">{error}</p>}
 
       {data ? (
-        <pre className="text-green-500 bg-gray-800 p-4 rounded">
+        <pre className="text-green-500 bg-gray-800 p-4 rounded text-sm">
           {JSON.stringify(data, null, 2)}
         </pre>
       ) : (
@@ -37,4 +43,3 @@ export default function Home() {
     </main>
   );
 }
-
