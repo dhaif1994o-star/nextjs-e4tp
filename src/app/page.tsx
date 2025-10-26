@@ -2,17 +2,22 @@
 
 import { useState } from "react";
 
-export default function Home() {
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
 
+export default function Home() {
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  // إرسال الرسالة إلى API
   const sendMessage = async () => {
     if (!input.trim()) return;
-    const newMessage = { role: "user", content: input };
-    setMessages((prev) => [...prev, newMessage]);
+
+    const userMessage: Message = { role: "user", content: input };
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
-    setLoading(true);
 
     try {
       const res = await fetch("/api/ai", {
@@ -21,52 +26,59 @@ export default function Home() {
         body: JSON.stringify({ text: input }),
       });
 
+      if (!res.ok) throw new Error("Failed to fetch response");
+
       const data = await res.json();
-      const reply = { role: "assistant", content: data.reply };
-      setMessages((prev) => [...prev, reply]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "حدث خطأ أثناء الاتصال 😕" },
-      ]);
-    } finally {
-      setLoading(false);
+      const aiMessage: Message = { role: "assistant", content: data.reply };
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (err) {
+      console.error(err);
+      const errorMessage: Message = {
+        role: "assistant",
+        content: "حدث خطأ أثناء الاتصال بالخادم، حاول لاحقاً ⚠️",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
     }
   };
 
-  return (
-    <main className="min-h-screen bg-gray-900 text-white p-6 flex flex-col">
-      <h1 className="text-3xl font-bold text-center mb-4">جازان AI 💬</h1>
+  // إرسال بالضغط على Enter
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") sendMessage();
+  };
 
-      <div className="flex-1 overflow-y-auto max-w-2xl mx-auto w-full space-y-3 p-4 bg-gray-800 rounded-lg">
+  return (
+    <main className="min-h-screen bg-gray-900 text-white p-6 flex flex-col items-center">
+      <h1 className="text-3xl font-bold text-center mb-6">
+        جازان AI 💬
+      </h1>
+
+      <div className="flex-1 w-full max-w-2xl overflow-y-auto space-y-3 p-4 bg-gray-800 rounded-2xl shadow-lg">
         {messages.map((msg, idx) => (
           <div
             key={idx}
-            className={`p-3 rounded-lg max-w-[75%] ${
+            className={`p-3 rounded-lg text-sm ${
               msg.role === "user"
-                ? "bg-blue-600 ml-auto text-right"
-                : "bg-gray-700 mr-auto text-left"
+                ? "bg-blue-600 text-right ml-auto w-fit"
+                : "bg-gray-700 text-left mr-auto w-fit"
             }`}
           >
             {msg.content}
           </div>
         ))}
-        {loading && <p className="text-center text-gray-400">🤖 جاري التفكير...</p>}
       </div>
 
-      <div className="max-w-2xl mx-auto w-full mt-4 flex">
+      <div className="flex w-full max-w-2xl mt-6">
         <input
           type="text"
-          className="flex-1 p-3 rounded-l-lg bg-gray-800 text-white"
-          placeholder="اكتب رسالتك..."
+          className="flex-1 p-3 rounded-l-2xl text-gray-900 focus:outline-none"
+          placeholder="اكتب رسالتك هنا..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          onKeyDown={handleKeyDown}
         />
         <button
           onClick={sendMessage}
-          disabled={loading}
-          className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-r-lg"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-r-2xl font-semibold"
         >
           إرسال
         </button>
