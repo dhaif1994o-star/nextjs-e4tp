@@ -1,45 +1,77 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useState } from "react";
 
 export default function Home() {
-  const [data, setData] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const baseUrl =
-          typeof window !== 'undefined' && window.location.hostname === 'localhost'
-            ? 'http://localhost:3000'
-            : 'https://nextjs-e4tp-yx8g.vercel.app';
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+    const newMessage = { role: "user", content: input };
+    setMessages((prev) => [...prev, newMessage]);
+    setInput("");
+    setLoading(true);
 
-        const res = await fetch(`${baseUrl}/api/test`);
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: input }),
+      });
 
-        const json = await res.json();
-        setData(json);
-      } catch {
-        setError('❌ Connection failed: Failed to fetch');
-      }
+      const data = await res.json();
+      const reply = { role: "assistant", content: data.reply };
+      setMessages((prev) => [...prev, reply]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "حدث خطأ أثناء الاتصال 😕" },
+      ]);
+    } finally {
+      setLoading(false);
     }
-
-    fetchData();
-  }, []);
+  };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-white text-black">
-      <h1 className="text-3xl font-bold mb-4">Jazan AI Web</h1>
+    <main className="min-h-screen bg-gray-900 text-white p-6 flex flex-col">
+      <h1 className="text-3xl font-bold text-center mb-4">جازان AI 💬</h1>
 
-      {error && <p className="text-red-500">{error}</p>}
+      <div className="flex-1 overflow-y-auto max-w-2xl mx-auto w-full space-y-3 p-4 bg-gray-800 rounded-lg">
+        {messages.map((msg, idx) => (
+          <div
+            key={idx}
+            className={`p-3 rounded-lg max-w-[75%] ${
+              msg.role === "user"
+                ? "bg-blue-600 ml-auto text-right"
+                : "bg-gray-700 mr-auto text-left"
+            }`}
+          >
+            {msg.content}
+          </div>
+        ))}
+        {loading && <p className="text-center text-gray-400">🤖 جاري التفكير...</p>}
+      </div>
 
-      {data ? (
-        <pre className="text-green-500 bg-gray-800 p-4 rounded text-sm">
-          {JSON.stringify(data, null, 2)}
-        </pre>
-      ) : (
-        !error && <p className="text-gray-500">Connecting to API...</p>
-      )}
+      <div className="max-w-2xl mx-auto w-full mt-4 flex">
+        <input
+          type="text"
+          className="flex-1 p-3 rounded-l-lg bg-gray-800 text-white"
+          placeholder="اكتب رسالتك..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+        />
+        <button
+          onClick={sendMessage}
+          disabled={loading}
+          className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-r-lg"
+        >
+          إرسال
+        </button>
+      </div>
     </main>
   );
 }
+
