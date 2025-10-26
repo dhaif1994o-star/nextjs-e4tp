@@ -11,7 +11,6 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
 
-  // إرسال الرسالة إلى API
   const sendMessage = async () => {
     if (!input.trim()) return;
 
@@ -35,50 +34,38 @@ export default function Home() {
       console.error(err);
       const errorMessage: Message = {
         role: "assistant",
-        content: "حدث خطأ أثناء الاتصال بالخادم، حاول لاحقاً ⚠️",
+        content: "An error occurred while getting a response.",
       };
       setMessages((prev) => [...prev, errorMessage]);
     }
   };
 
-  // إرسال بالضغط على Enter
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") sendMessage();
-  };
-
   return (
-    <main className="min-h-screen bg-gray-900 text-white p-6 flex flex-col items-center">
-      <h1 className="text-3xl font-bold text-center mb-6">
-        جازان AI 💬
-      </h1>
-
-      <div className="flex-1 w-full max-w-2xl overflow-y-auto space-y-3 p-4 bg-gray-800 rounded-2xl shadow-lg">
+    <main className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-6">
+      <h1 className="text-3xl font-bold mb-6">جازان AI 💬</h1>
+      <div className="w-full max-w-2xl bg-gray-800 rounded-lg p-4 flex flex-col space-y-3 overflow-y-auto h-[70vh]">
         {messages.map((msg, idx) => (
           <div
             key={idx}
-            className={`p-3 rounded-lg text-sm ${
-              msg.role === "user"
-                ? "bg-blue-600 text-right ml-auto w-fit"
-                : "bg-gray-700 text-left mr-auto w-fit"
+            className={`p-3 rounded-lg ${
+              msg.role === "user" ? "bg-blue-600 self-end" : "bg-gray-700 self-start"
             }`}
           >
             {msg.content}
           </div>
         ))}
       </div>
-
-      <div className="flex w-full max-w-2xl mt-6">
+      <div className="flex w-full max-w-2xl mt-4">
         <input
           type="text"
-          className="flex-1 p-3 rounded-l-2xl text-gray-900 focus:outline-none"
-          placeholder="اكتب رسالتك هنا..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
+          placeholder="اكتب رسالتك هنا..."
+          className="flex-grow p-3 rounded-l-lg bg-gray-800 text-white outline-none"
         />
         <button
           onClick={sendMessage}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-r-2xl font-semibold"
+          className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-r-lg"
         >
           إرسال
         </button>
