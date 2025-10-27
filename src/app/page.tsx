@@ -1,90 +1,114 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useState, useEffect, useRef } from "react";
+import { ArrowUpRight } from "lucide-react";
 
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
+type Message = { role: "user" | "assistant"; content: string };
 
 export default function Home() {
-  const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
-
-    const userMessage: Message = { role: "user", content: input };
-    setMessages((prev) => [...prev, userMessage]);
+    const userMsg: Message = { role: "user", content: input };
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
+    setLoading(true);
 
     try {
-      const res = await fetch("/api/ai", {
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: input }),
+        body: JSON.stringify({ message: input }),
       });
 
-      if (!res.ok) throw new Error("Failed to fetch response");
-
       const data = await res.json();
-      const aiMessage: Message = { role: "assistant", content: data.reply };
-      setMessages((prev) => [...prev, aiMessage]);
-    } catch (err) {
-      console.error(err);
-      const errorMessage: Message = {
-        role: "assistant",
-        content: "حدث خطأ أثناء محاولة الحصول على الرد. الرجاء المحاولة لاحقًا.",
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      const reply = data.reply || "تعذر الحصول على رد.";
+
+      // تأثير التوليد الحرفي
+      let text = "";
+      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+      for (const ch of reply) {
+        text += ch;
+        await new Promise((r) => setTimeout(r, 20));
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1].content = text;
+          return updated;
+        });
+      }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "حدث خطأ أثناء الاتصال بالخدمة." },
+      ]);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-[#0f172a] text-white p-4">
-      <h1 className="text-3xl font-bold mb-4">جازان AI 💬</h1>
-      <p className="text-gray-300 mb-6 text-center">
-        تم تطوير هذا المشروع الفردي من جازان عام 2025 — خطوة أولى في بناء ذكاء اصطناعي عربي مستقل.
-      </p>
-
-      <div className="w-full max-w-xl bg-gray-800 p-4 rounded-2xl shadow-lg">
-        <div className="h-96 overflow-y-auto mb-4 space-y-2">
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`p-2 rounded-xl ${
-                msg.role === "user" ? "bg-blue-600 text-right" : "bg-gray-700 text-left"
-              }`}
-            >
-              {msg.content}
-            </div>
-          ))}
-        </div>
-
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="اكتب رسالتك هنا..."
-            className="flex-grow p-2 rounded-xl text-black"
-          />
-          <button
-            onClick={sendMessage}
-            className="bg-blue-600 px-4 py-2 rounded-xl hover:bg-blue-700"
-          >
-            إرسال
-          </button>
-        </div>
-
-        <div className="flex justify-between mt-4 text-sm text-gray-400">
-          <Link href="/history" className="hover:text-blue-400">
-            📜 عرض سجل المحادثات
-          </Link>
-          <span>© 2025 — تطوير شخصي من جازان</span>
-        </div>
+    <main className="flex flex-col items-center min-h-screen bg-white text-black p-6">
+      {/* العنوان */}
+      <div className="flex flex-col items-center justify-center mt-6 mb-4">
+        <img src="/falcon-logo.png" alt="Jazan AI Logo" className="w-24 h-24 object-contain mb-3" />
+        <h1 className="text-3xl font-bold">جازان <span className="text-gray-800">AI</span></h1>
+        <p className="text-gray-600 text-sm mt-1">
+          تم تطوير هذا المشروع في جازان عام 2025 — ذكاء سعودي مستقل 🇸🇦
+        </p>
       </div>
+
+      {/* المحادثة */}
+      <div
+        ref={scrollRef}
+        className="w-full max-w-3xl bg-gray-100 p-5 rounded-3xl shadow-inner min-h-[420px] max-h-[60vh] overflow-y-auto"
+      >
+        {messages.map((msg, i) => (
+          <div
+            key={i}
+            dir="rtl"
+            className={`my-2 px-4 py-3 rounded-2xl max-w-[85%] leading-relaxed ${
+              msg.role === "user"
+                ? "bg-blue-500 text-white self-end ml-auto text-right"
+                : "bg-gray-300 text-black self-start mr-auto text-right"
+            }`}
+          >
+            {msg.content}
+          </div>
+        ))}
+        {loading && <p className="text-gray-400 text-sm mt-2 animate-pulse">جارٍ التفكير...</p>}
+      </div>
+
+      {/* الإدخال */}
+      <div className="flex items-center w-full max-w-2xl mt-6">
+        <input
+          dir="rtl"
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          placeholder="اكتب رسالتك هنا..."
+          className="flex-1 border border-gray-300 rounded-full px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-right"
+        />
+        <button
+          onClick={sendMessage}
+          disabled={loading}
+          className="ml-3 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 disabled:opacity-50"
+        >
+          <ArrowUpRight size={22} />
+        </button>
+      </div>
+
+      <footer className="text-center text-sm text-gray-500 mt-6">
+        © 2025 — تطوير شخصي من جازان 🇸🇦
+      </footer>
     </main>
   );
 }
