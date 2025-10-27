@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 interface Message {
   role: "user" | "assistant";
@@ -25,7 +26,7 @@ export default function Home() {
         body: JSON.stringify({ text: input }),
       });
 
-<h2 className="text-lg text-green-600">تم الربط بنجاح 🎯</h2>      if (!res.ok) throw new Error("Failed to fetch response");
+      if (!res.ok) throw new Error("Failed to fetch response");
 
       const data = await res.json();
       const aiMessage: Message = { role: "assistant", content: data.reply };
@@ -34,29 +35,26 @@ export default function Home() {
       console.error(err);
       const errorMessage: Message = {
         role: "assistant",
-        content: "حدث خطأ أثناء محاولة الحصول على استجابة.",
+        content: "حدث خطأ أثناء محاولة الحصول على الرد. الرجاء المحاولة لاحقًا.",
       };
       setMessages((prev) => [...prev, errorMessage]);
     }
   };
 
   return (
-    <main className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-6">
-      <h1 className="text-3xl font-bold mb-2">جازان AI 🤖</h1>
-      <p className="text-gray-400 mb-6 text-center max-w-xl">
-        تم تطوير هذا النظام بجهد فردي في <span className="text-blue-400">جازان</span>،
-        ليكون مثالًا على الإصرار والتعلم الذاتي في عالم الذكاء الاصطناعي.
+    <main className="flex flex-col items-center justify-center min-h-screen bg-[#0f172a] text-white p-4">
+      <h1 className="text-3xl font-bold mb-4">جازان AI 💬</h1>
+      <p className="text-gray-300 mb-6 text-center">
+        تم تطوير هذا المشروع الفردي من جازان عام 2025 — خطوة أولى في بناء ذكاء اصطناعي عربي مستقل.
       </p>
 
-      <div className="w-full max-w-2xl bg-gray-800 p-4 rounded-xl shadow-lg flex-1 flex flex-col">
-        <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+      <div className="w-full max-w-xl bg-gray-800 p-4 rounded-2xl shadow-lg">
+        <div className="h-96 overflow-y-auto mb-4 space-y-2">
           {messages.map((msg, i) => (
             <div
               key={i}
-              className={`p-3 rounded-lg ${
-                msg.role === "user"
-                  ? "bg-blue-600 text-right ml-auto max-w-[80%]"
-                  : "bg-gray-700 text-left mr-auto max-w-[80%]"
+              className={`p-2 rounded-xl ${
+                msg.role === "user" ? "bg-blue-600 text-right" : "bg-gray-700 text-left"
               }`}
             >
               {msg.content}
@@ -64,37 +62,29 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex gap-2">
           <input
             type="text"
-            placeholder="اكتب رسالتك هنا..."
-            className="flex-1 p-2 rounded-lg text-black outline-none"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            placeholder="اكتب رسالتك هنا..."
+            className="flex-grow p-2 rounded-xl text-black"
           />
           <button
             onClick={sendMessage}
-            className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-semibold"
+            className="bg-blue-600 px-4 py-2 rounded-xl hover:bg-blue-700"
           >
             إرسال
           </button>
         </div>
 
-        <div className="text-center mt-6">
-          <a
-            href="/history"
-            className="inline-block px-6 py-2 bg-green-600 hover:bg-green-700 rounded-full text-white font-semibold transition"
-          >
+        <div className="flex justify-between mt-4 text-sm text-gray-400">
+          <Link href="/history" className="hover:text-blue-400">
             📜 عرض سجل المحادثات
-          </a>
+          </Link>
+          <span>© 2025 — تطوير شخصي من جازان</span>
         </div>
       </div>
-
-      <footer className="mt-8 text-gray-500 text-sm text-center">
-        © 2025 تم تطوير هذا المشروع بجهد شخصي وكفاح مستمر — 
-        <span className="text-blue-400"> رحلة تعلم لا تنتهي ❤️</span>
-      </footer>
     </main>
   );
 }
