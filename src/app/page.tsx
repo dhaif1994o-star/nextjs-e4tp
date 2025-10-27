@@ -25,7 +25,7 @@ export default function Home() {
         body: JSON.stringify({ text: input }),
       });
 
-      if (!res.ok) throw new Error("Failed to fetch response");
+<h2 className="text-lg text-green-600">تم الربط بنجاح 🎯</h2>      if (!res.ok) throw new Error("Failed to fetch response");
 
       const data = await res.json();
       const aiMessage: Message = { role: "assistant", content: data.reply };
