@@ -34,7 +34,7 @@ export default function Home() {
       console.error(err);
       const errorMessage: Message = {
         role: "assistant",
-        content: "An error occurred while getting a response.",
+        content: "حدث خطأ أثناء محاولة الحصول على استجابة.",
       };
       setMessages((prev) => [...prev, errorMessage]);
     }
@@ -42,35 +42,59 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-6">
-      <h1 className="text-3xl font-bold mb-6">جازان AI 💬</h1>
-      <div className="w-full max-w-2xl bg-gray-800 rounded-lg p-4 flex flex-col space-y-3 overflow-y-auto h-[70vh]">
-        {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`p-3 rounded-lg ${
-              msg.role === "user" ? "bg-blue-600 self-end" : "bg-gray-700 self-start"
-            }`}
+      <h1 className="text-3xl font-bold mb-2">جازان AI 🤖</h1>
+      <p className="text-gray-400 mb-6 text-center max-w-xl">
+        تم تطوير هذا النظام بجهد فردي في <span className="text-blue-400">جازان</span>،
+        ليكون مثالًا على الإصرار والتعلم الذاتي في عالم الذكاء الاصطناعي.
+      </p>
+
+      <div className="w-full max-w-2xl bg-gray-800 p-4 rounded-xl shadow-lg flex-1 flex flex-col">
+        <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              className={`p-3 rounded-lg ${
+                msg.role === "user"
+                  ? "bg-blue-600 text-right ml-auto max-w-[80%]"
+                  : "bg-gray-700 text-left mr-auto max-w-[80%]"
+              }`}
+            >
+              {msg.content}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <input
+            type="text"
+            placeholder="اكتب رسالتك هنا..."
+            className="flex-1 p-2 rounded-lg text-black outline-none"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          />
+          <button
+            onClick={sendMessage}
+            className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-semibold"
           >
-            {msg.content}
-          </div>
-        ))}
+            إرسال
+          </button>
+        </div>
+
+        <div className="text-center mt-6">
+          <a
+            href="/history"
+            className="inline-block px-6 py-2 bg-green-600 hover:bg-green-700 rounded-full text-white font-semibold transition"
+          >
+            📜 عرض سجل المحادثات
+          </a>
+        </div>
       </div>
-      <div className="flex w-full max-w-2xl mt-4">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="اكتب رسالتك هنا..."
-          className="flex-grow p-3 rounded-l-lg bg-gray-800 text-white outline-none"
-        />
-        <button
-          onClick={sendMessage}
-          className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-r-lg"
-        >
-          إرسال
-        </button>
-      </div>
+
+      <footer className="mt-8 text-gray-500 text-sm text-center">
+        © 2025 تم تطوير هذا المشروع بجهد شخصي وكفاح مستمر — 
+        <span className="text-blue-400"> رحلة تعلم لا تنتهي ❤️</span>
+      </footer>
     </main>
   );
 }
-
